@@ -30,8 +30,15 @@ class DataBaseHelper {
     return database;
   }
 
- static Future<int> insertProductData(ProductsModal productsModal) async {
+  static Future<int> insertProductData(ProductsModal productsModal) async {
     Database? dbClient = await DataBaseHelper.database;
     return await dbClient!.insert('ProductsDetails', productsModal.toJson());
+  }
+
+  Future<List<ProductsModal>> getProductData() async {
+    Database? database = await DataBaseHelper.database;
+    List<Map<String, Object?>> queryResult =
+        await database!.query('ProductsDetails');
+    return queryResult.map((e) => ProductsModal.fromJson(e)).toList();
   }
 }
