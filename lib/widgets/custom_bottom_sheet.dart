@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:new_shopping_cart/database/database_helper.dart';
-import 'package:new_shopping_cart/modals/add_product_modal.dart';
+
+import 'package:new_shopping_cart/provider/shopping_cart_provider.dart';
 import 'package:new_shopping_cart/widgets/custom_text_field.dart';
+import 'package:provider/provider.dart';
 
 class CustomBottomSheet extends StatelessWidget {
   const CustomBottomSheet({Key? key}) : super(key: key);
@@ -10,7 +12,7 @@ class CustomBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     TextEditingController productNameController = TextEditingController();
     TextEditingController productPriceController = TextEditingController();
-    TextEditingController productQuantityController = TextEditingController();
+
     GlobalKey<FormState> formKey = GlobalKey<FormState>();
     return StatefulBuilder(
       builder: (context, setState) {
@@ -71,41 +73,18 @@ class CustomBottomSheet extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                 ),
-                CustomTextField(
-                  textInputType: TextInputType.number,
-                  label: 'Product Quantity',
-                  controller: productQuantityController,
-                  validator: (value) {
-                    if (value != null) {
-                      if (value.isEmpty) {
-                        return 'Please fill the TextField';
-                      } else if (value.contains('.') || value.contains(',')) {
-                        return 'Please enter a valid number!!';
-                      }
-                    } else {
-                      print('NULL TEXT FIELD');
-                    }
-                  },
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
                 SizedBox(
                   width: double.maxFinite,
                   child: ElevatedButton(
                     onPressed: () {
                       checkValidation(context, formKey).then((value) {
                         if (value) {
-                          DataBaseHelper.insertProductData(
-                            ProductsModal(
-                              name: productNameController.text,
-                              price: productPriceController.text,
-                              quantity: productQuantityController.text,
-                            ),
-                          ).then((value) {
-                            print(value);
+                          int tempQuantity=1;
+                          DataBaseHelper.insertProductData(productNameController.text, productPriceController.text,tempQuantity).then((value) {
+                            print('DATA INSERTED SUCESS');
+                            Provider.of<ShoppingCartProvider>(context, listen: false).getAllProductData();
                           });
-                        } else {}
+                        }
                       });
                     },
                     child: const Text('Add Product'),

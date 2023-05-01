@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:new_shopping_cart/modals/add_product_modal.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -24,21 +21,29 @@ class DataBaseHelper {
       version: 1,
       onCreate: (db, version) async {
         await db.execute(
-            "CREATE TABLE ProductsDetails (id INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT,Price TEXT,Quantity TEXT)");
+            "CREATE TABLE ProductsDetails (id INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT,Price TEXT,Quantity INTEGER)");
       },
     );
     return database;
   }
 
-  static Future<int> insertProductData(ProductsModal productsModal) async {
+  static Future<int> insertProductData(
+      String name, String price, int quantity) async {
     Database? dbClient = await DataBaseHelper.database;
-    return await dbClient!.insert('ProductsDetails', productsModal.toJson());
+    String insertQuery =
+        " INSERT INTO ProductsDetails(Name,Price,Quantity) VALUES('$name','$price',$quantity)";
+    return dbClient!.rawInsert(insertQuery);
   }
 
-  Future<List<ProductsModal>> getProductData() async {
+  static Future<List<Map<String, dynamic>>> getProductData() async {
     Database? database = await DataBaseHelper.database;
-    List<Map<String, Object?>> queryResult =
-        await database!.query('ProductsDetails');
-    return queryResult.map((e) => ProductsModal.fromJson(e)).toList();
+    String getProductDataQuery = "SELECT * FROM ProductsDetails";
+    return database!.rawQuery(getProductDataQuery);
+  }
+
+  static updateQuantity(int updatedQuantity, int id) async {
+    Database? database = await DataBaseHelper.database;
+    String updateQuery = "UPDATE ProductsDetails SET Quantity='$updatedQuantity'WHERE id ='$id'";
+    database!.rawUpdate(updateQuery);
   }
 }
