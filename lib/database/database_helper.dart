@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -21,18 +23,38 @@ class DataBaseHelper {
       version: 1,
       onCreate: (db, version) async {
         await db.execute(
-            "CREATE TABLE ProductsDetails (id INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT,Price TEXT,Quantity INTEGER)");
+            "CREATE TABLE ProductsDetails (id INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT,Price TEXT)");
+        await db.execute(
+            "CREATE TABLE CartDetail (id INTEGER PRIMARY KEY AUTOINCREMENT,ProductName TEXT,ProductPrice TEXT,Quantity INTEGER,ProductId INTEGER)");
       },
     );
     return database;
   }
 
-  static Future<int> insertProductData(
-      String name, String price, int quantity) async {
+  static Future<int> insertProductData(String name, String price) async {
     Database? dbClient = await DataBaseHelper.database;
     String insertQuery =
-        " INSERT INTO ProductsDetails(Name,Price,Quantity) VALUES('$name','$price',$quantity)";
+        "INSERT INTO ProductsDetails(Name,Price) VALUES('$name','$price')";
     return dbClient!.rawInsert(insertQuery);
+  }
+
+  static Future<int> insertProductDataInCart(
+      String name, String price, int quantity, int productId) async {
+    Database? dbClient = await DataBaseHelper.database;
+    String insertQuery =
+        "INSERT INTO CartDetail(ProductName,ProductPrice,Quantity,ProductId) VALUES('$name','$price','$quantity','$productId')";
+    return dbClient!.rawInsert(insertQuery);
+  }
+
+  static Future<bool> checkProductAlreadyExist(int productId) async {
+    Database? database = await DataBaseHelper.database;
+    String checkProductAlreadyExistQuery = "SELECT * FROM CartDetail WHERE id ='$productId'";
+    List<Map<String, dynamic>> result = await database!.rawQuery(checkProductAlreadyExistQuery);
+    if (result.length == 1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getProductData() async {
@@ -41,9 +63,15 @@ class DataBaseHelper {
     return database!.rawQuery(getProductDataQuery);
   }
 
-  static updateQuantity(int updatedQuantity, int id) async {
+  static Future<List<Map<String, dynamic>>> getProductDataFromCart() async {
     Database? database = await DataBaseHelper.database;
-    String updateQuery = "UPDATE ProductsDetails SET Quantity='$updatedQuantity'WHERE id ='$id'";
-    database!.rawUpdate(updateQuery);
+    String getProductDataQuery = "SELECT * FROM CartDetail";
+    return database!.rawQuery(getProductDataQuery);
+  }
+
+  static Future<int>deleteItemFromCart(int id) async {
+    Database? database = await DataBaseHelper.database;
+    String deleteQuery = "DELETE FROM CartDetail WHERE id='$id'";
+  return  database!.rawDelete(deleteQuery);
   }
 }

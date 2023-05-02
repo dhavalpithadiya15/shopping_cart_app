@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:new_shopping_cart/database/database_helper.dart';
+
 import 'package:provider/provider.dart';
 
 import '../provider/shopping_cart_provider.dart';
@@ -8,6 +10,7 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final myProvider = Provider.of<ShoppingCartProvider>(context);
     return Consumer<ShoppingCartProvider>(
       builder: (context, value, child) {
         if (value.isLoad == false) {
@@ -58,15 +61,9 @@ class CustomListTile extends StatelessWidget {
                               ),
                               Expanded(
                                 child: Container(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Rs :${value.allProductDataList[index]['Price']}',
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.black.withOpacity(0.5),
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ),
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                        'Price : ${value.allProductDataList[index]['Price']}')),
                               ),
                             ],
                           ),
@@ -77,47 +74,67 @@ class CustomListTile extends StatelessWidget {
                         child: Column(
                           children: [
                             Expanded(
-                                flex: 2,
-                                child: Container(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        onPressed: () =>
-                                            value.increaseQuantity(index),
-                                        icon: const Icon(
-                                          Icons.add,
-                                          size: 25,
-                                          color: Colors.blue,
-                                        ),
+                              flex: 2,
+                              child: Container(
+                                alignment: Alignment.bottomCenter,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () =>
+                                          value.increaseQuantity(index),
+                                      icon: const Icon(
+                                        Icons.add,
+                                        size: 25,
+                                        color: Colors.blue,
                                       ),
-                                      const SizedBox(
-                                        width: 10,
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      '${value.quantityValueStorage[index]}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
                                       ),
-                                      Text(
-                                        '${value.allProductDataList[index]['Quantity']}',
-                                        style: const TextStyle(
-                                            fontSize: 16, color: Colors.grey,),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    IconButton(
+                                      onPressed: () =>
+                                          value.decreaseQuantity(index),
+                                      icon: const Icon(
+                                        Icons.remove,
+                                        size: 25,
+                                        color: Colors.red,
                                       ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      IconButton(
-                                        onPressed: () =>value.decreaseQuantity(index),
-                                        icon: const Icon(
-                                          Icons.remove,
-                                          size: 25,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () {
-
+                                onPressed: () async {
+                                 await DataBaseHelper.checkProductAlreadyExist(value.allProductDataList[index]['id']).then((value) async {
+                                    print(value);
+                                    if (value) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product already exits in cart')));
+                                    } else {
+                                     await DataBaseHelper.insertProductDataInCart(myProvider.allProductDataList[index]['Name'], myProvider.allProductDataList[index]['Price'], myProvider.quantityValueStorage[index], myProvider.allProductDataList[index]['id'])
+                                          .then((value) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content:
+                                                Text('Product added to cart'),
+                                          ),
+                                        );
+                                      });
+                                    }
+                                  });
                                 },
                                 child: const Text('Add to Cart'),
                               ),

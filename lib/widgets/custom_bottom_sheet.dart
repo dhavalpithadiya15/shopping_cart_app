@@ -79,8 +79,7 @@ class CustomBottomSheet extends StatelessWidget {
                     onPressed: () {
                       checkValidation(context, formKey).then((value) {
                         if (value) {
-                          int tempQuantity=1;
-                          DataBaseHelper.insertProductData(productNameController.text, productPriceController.text,tempQuantity).then((value) {
+                          DataBaseHelper.insertProductData(productNameController.text, productPriceController.text,).then((value) {
                             print('DATA INSERTED SUCESS');
                             Provider.of<ShoppingCartProvider>(context, listen: false).getAllProductData();
                           });
